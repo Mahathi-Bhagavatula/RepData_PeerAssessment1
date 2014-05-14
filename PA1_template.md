@@ -6,44 +6,75 @@ The assignment includes the analysis of various parameters of Activity Monitorin
 This chunk of code includes loading of data. 
 The data is read into a variable called 'doc'
 
-```{r loading_data, echo=TRUE}
+
+```r
 doc <- read.csv("activity.csv")
 ```
+
 
 ## What is mean total number of steps taken per day?
 
 This chunk of code calculates the total number of steps taken every day and draws mean and median for that data.
 
 consider the date column of the doc variable. convert that into numeric which will represent each date as a sequence of numbers.
-```{r , echo=TRUE}
+
+```r
 doc$dates <- as.numeric(doc$date)
 ```
+
 In this case 01-10-2012 is represented as 1, 02-10-2012 as 2, and so on.
 So finally, total number of days is 61.
-```{r , echo=TRUE}
+
+```r
 length(doc$dates)
-````
+```
+
+```
+## [1] 17568
+```
+
 
 Split the column 'Steps' by each date and calculate the sum of steps for each date.
-```{r , echo=TRUE}
-repetitions <- sapply(split(doc$steps, doc$dates), function(x) sum(x,na.rm=TRUE))
+
+```r
+repetitions <- sapply(split(doc$steps, doc$dates), function(x) sum(x, na.rm = TRUE))
 ```
+
 
 Repeate each date as number of times a the sum of steps and then draw the histogram.
 
-```{r hist, echo=TRUE}
-hist(rep(as.numeric(names(repetitions)), repetitions), xlab="Days", ylab="steps in each day", main="Histogram of sum of steps in each day",xlim=c(1,61),breaks=61, axes=FALSE)
-axis(1,seq(1,61,1))
-axis(2,seq(0,22000,500))
+
+```r
+hist(rep(as.numeric(names(repetitions)), repetitions), xlab = "Days", ylab = "steps in each day", 
+    main = "Histogram of sum of steps in each day", xlim = c(1, 61), breaks = 61, 
+    axes = FALSE)
+axis(1, seq(1, 61, 1))
+axis(2, seq(0, 22000, 500))
 box()
 ```
+
+![plot of chunk hist](figure/hist.png) 
+
 Finally calculate the mean and median of the sum of steps.
-```{r mean, echo=TRUE}
+
+```r
 mean1 <- mean(repetitions)
 median1 <- median(repetitions)
 mean1
+```
+
+```
+## [1] 9354
+```
+
+```r
 median1
 ```
+
+```
+## [1] 10395
+```
+
 
 ## What is the average daily activity pattern?
 
@@ -52,20 +83,38 @@ This chunk of code deals with average number of steps in various time intervals 
 Split the steps based on different time intervals and calculate its mean.
 Now, plot the steps and interval with type l.
 
-```{r, echo=TRUE}
-avgSteps <- sapply(split(doc$steps,doc$interval), function(x) mean(x,na.rm=TRUE))
 
-plot(as.numeric(names(avgSteps)),as.numeric(avgSteps), xlab=" 5-minute interval", ylab="average number of steps taken across all days",main="interval vs number of steps", type="l")
+```r
+avgSteps <- sapply(split(doc$steps, doc$interval), function(x) mean(x, na.rm = TRUE))
+
+plot(as.numeric(names(avgSteps)), as.numeric(avgSteps), xlab = " 5-minute interval", 
+    ylab = "average number of steps taken across all days", main = "interval vs number of steps", 
+    type = "l")
 ```
+
+![plot of chunk unnamed-chunk-4](figure/unnamed-chunk-4.png) 
+
 
 maximum average number of steps for the time interval is as follows:
-```{r,echo=TRUE}
+
+```r
 as.numeric(names(avgSteps[max(avgSteps)]))
 ```
+
+```
+## [1] 1705
+```
+
 and the maximum average number of steps are :
-```{r,echo=TRUE}
+
+```r
 avgSteps[max(avgSteps)][[1]]
 ```
+
+```
+## [1] 56.3
+```
+
 
 
 ## Imputing missing values
@@ -73,39 +122,65 @@ avgSteps[max(avgSteps)][[1]]
 This chunk of code deals with missing values. 
 
 The total number of missing values in the dataset can be counted by
-```{r,echo=TRUE}
-nrow(doc[!complete.cases(doc),])
+
+```r
+nrow(doc[!complete.cases(doc), ])
 ```
+
+```
+## [1] 2304
+```
+
 These missing values are filled with mean of that 5-minute interval across all dates. This is stored in another variable doc1.
 
-```{r, echo=TRUE}
+
+```r
 doc1 <- doc
-doc1$Mean <- sapply(split(doc1$steps,doc1$interval), function(x) mean(x,na.rm=TRUE))
+doc1$Mean <- sapply(split(doc1$steps, doc1$interval), function(x) mean(x, na.rm = TRUE))
 index <- which(is.na(doc1$steps), arr.ind = TRUE)
 doc1$steps[index] <- doc1$Mean[index]
 ```
 
+
 Now if we plot the histogram for total number of steps for each day. The plot may look as follows:
 
-```{r , echo=TRUE}
-repetitions1 <- sapply(split(doc1$steps, doc1$dates), function(x) sum(x,na.rm=TRUE))
-hist(rep(as.numeric(names(repetitions1)), repetitions1), xlab="Days", ylab="steps in each day", main="Histogram of sum of steps in each day",xlim=c(1,61),breaks=61, axes=FALSE)
-axis(1,seq(1,61,1))
-axis(2,seq(0,22000,500))
-box()
 
+```r
+repetitions1 <- sapply(split(doc1$steps, doc1$dates), function(x) sum(x, na.rm = TRUE))
+hist(rep(as.numeric(names(repetitions1)), repetitions1), xlab = "Days", ylab = "steps in each day", 
+    main = "Histogram of sum of steps in each day", xlim = c(1, 61), breaks = 61, 
+    axes = FALSE)
+axis(1, seq(1, 61, 1))
+axis(2, seq(0, 22000, 500))
+box()
 ```
+
+![plot of chunk unnamed-chunk-9](figure/unnamed-chunk-9.png) 
+
 
 Now if we calculte the mean and median for the new set of total number of steps in each day.
 
-```{r, echo=TRUE}
+
+```r
 mean2 <- mean(repetitions1)
 median2 <- median(repetitions1)
 mean2
+```
+
+```
+## [1] 10766
+```
+
+```r
 median2
 ```
 
-Now, if we can notice, the mean of total number of steps in each day for the new set `r mean2` and for old data `r mean1` differes a lot. That is even reflected for median, i.e the values of median for new data `r median2` is higher than that of old data`r median1`.
+```
+## [1] 10766
+```
+
+
+Now, if we can notice, the mean of total number of steps in each day for the new set 1.0766 &times; 10<sup>4</sup> and for old data 9354.2295 differes a lot. That is even reflected for median, i.e the values of median for new data 1.0766 &times; 10<sup>4</sup> is higher than that of old data10395.
 
 As we have ignored the missing values previously, hence the values of mean and median are less than the case where we have imputed the missing values.
 
@@ -116,26 +191,38 @@ Each day is classified as weekday or weekend. Then get the distribution of time-
 
 A column named 'weekday' is created in doc variable, which gives information if a day is a weekday or a weekend.
 
-```{r,echo=TRUE}
-doc$weekday <- sapply(weekdays(as.Date(doc$date)), function(x) if(x=="Sunday"|x=="Saturday") return("weekend") else return("weekday"))
+
+```r
+doc$weekday <- sapply(weekdays(as.Date(doc$date)), function(x) if (x == "Sunday" | 
+    x == "Saturday") return("weekend") else return("weekday"))
 ```
+
 
 Now, consider two variables weekdayDoc and weekendDoc, which includes the entire information regarding weekdays and weekends respectively.
 
-```{r,echo=TRUE}
-weekdayDoc <- doc[doc$weekday=="weekday",]
-weekendDoc <- doc[doc$weekday=="weekend",]
+
+```r
+weekdayDoc <- doc[doc$weekday == "weekday", ]
+weekendDoc <- doc[doc$weekday == "weekend", ]
 ```
+
 
 Now, plot the graph which includes the distribution of average number of steps taken for each time interval across weekdays and weekends seperately.
-```{r, echo=TRUE}
-par(mfrow=c(2,1))
-weekendAvgSteps <- sapply(split(weekendDoc$steps,weekendDoc$interval), function(x) mean(x,na.rm=TRUE))
 
-plot(as.numeric(names(weekendAvgSteps)), as.numeric(weekendAvgSteps), main="weekend", xlab="interval", ylab= "Number of steps", type="l", col="blue")
+```r
+par(mfrow = c(2, 1))
+weekendAvgSteps <- sapply(split(weekendDoc$steps, weekendDoc$interval), function(x) mean(x, 
+    na.rm = TRUE))
 
-weekdayAvgSteps <- sapply(split(weekdayDoc$steps,weekdayDoc$interval), function(x) mean(x,na.rm=TRUE))
+plot(as.numeric(names(weekendAvgSteps)), as.numeric(weekendAvgSteps), main = "weekend", 
+    xlab = "interval", ylab = "Number of steps", type = "l", col = "blue")
 
-plot(as.numeric(names(weekdayAvgSteps)), as.numeric(weekdayAvgSteps), main="weekday", xlab="interval", ylab= "Number of steps", type="l", col="blue")
+weekdayAvgSteps <- sapply(split(weekdayDoc$steps, weekdayDoc$interval), function(x) mean(x, 
+    na.rm = TRUE))
 
+plot(as.numeric(names(weekdayAvgSteps)), as.numeric(weekdayAvgSteps), main = "weekday", 
+    xlab = "interval", ylab = "Number of steps", type = "l", col = "blue")
 ```
+
+![plot of chunk unnamed-chunk-13](figure/unnamed-chunk-13.png) 
+
