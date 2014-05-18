@@ -46,8 +46,8 @@ Repeate each date as number of times a the sum of steps and then draw the histog
 
 ```r
 hist(rep(as.numeric(names(repetitions)), repetitions), xlab = "Days", ylab = "steps in each day", 
-    main = "Histogram of sum of steps in each day", xlim = c(1, 61), breaks = 61, 
-    axes = FALSE)
+    main = "Histogram of sum of steps in each day", col = "red", xlim = c(1, 
+        61), breaks = 61, axes = FALSE)
 axis(1, seq(1, 61, 1))
 axis(2, seq(0, 22000, 500))
 box()
@@ -95,26 +95,16 @@ plot(as.numeric(names(avgSteps)), as.numeric(avgSteps), xlab = " 5-minute interv
 ![plot of chunk unnamed-chunk-4](figure/unnamed-chunk-4.png) 
 
 
-maximum average number of steps for the time interval is as follows:
+time interval with the maximum average number of steps is as follows:
 
 ```r
-as.numeric(names(avgSteps[max(avgSteps)]))
+maxVal <- max(avgSteps)
+names(avgSteps[avgSteps == maxVal])
 ```
 
 ```
-## [1] 1705
+## [1] "835"
 ```
-
-and the maximum average number of steps are :
-
-```r
-avgSteps[max(avgSteps)][[1]]
-```
-
-```
-## [1] 56.3
-```
-
 
 
 ## Imputing missing values
@@ -133,12 +123,21 @@ nrow(doc[!complete.cases(doc), ])
 
 These missing values are filled with mean of that 5-minute interval across all dates. This is stored in another variable doc1.
 
+First, the average number of steps for each 5-minute interval is calculated and stored in variable intervalMean. The indices of the missing values are noted and the corresponding 5-minute intervals are extracted. For the extracted 5-minute intervals vector, a new vector is created which is filled with the average values of that correspoding 5-minute interval. This vector is filled in the corresponding missing indices of Steps.
 
 ```r
 doc1 <- doc
-doc1$Mean <- sapply(split(doc1$steps, doc1$interval), function(x) mean(x, na.rm = TRUE))
+intervalMean <- sapply(split(doc1$steps, doc1$interval), function(x) mean(x, 
+    na.rm = TRUE))
 index <- which(is.na(doc1$steps), arr.ind = TRUE)
-doc1$steps[index] <- doc1$Mean[index]
+
+intervalIndices <- doc1$interval[index]
+imputeValues <- sapply(intervalIndices, function(x) {
+    intervalMean[names(intervalMean) == x]
+})
+for (i in 1:length(index)) {
+    doc1$steps[index[i]] <- imputeValues[i]
+}
 ```
 
 
@@ -148,14 +147,14 @@ Now if we plot the histogram for total number of steps for each day. The plot ma
 ```r
 repetitions1 <- sapply(split(doc1$steps, doc1$dates), function(x) sum(x, na.rm = TRUE))
 hist(rep(as.numeric(names(repetitions1)), repetitions1), xlab = "Days", ylab = "steps in each day", 
-    main = "Histogram of sum of steps in each day", xlim = c(1, 61), breaks = 61, 
-    axes = FALSE)
+    main = "Histogram of sum of steps in each day", col = "red", xlim = c(1, 
+        61), breaks = 61, axes = FALSE)
 axis(1, seq(1, 61, 1))
 axis(2, seq(0, 22000, 500))
 box()
 ```
 
-![plot of chunk unnamed-chunk-9](figure/unnamed-chunk-9.png) 
+![plot of chunk unnamed-chunk-8](figure/unnamed-chunk-8.png) 
 
 
 Now if we calculte the mean and median for the new set of total number of steps in each day.
@@ -189,11 +188,11 @@ As we have ignored the missing values previously, hence the values of mean and m
 
 Each day is classified as weekday or weekend. Then get the distribution of time-interval and average number of steps for each class (i.e., weekday, weekend).
 
-A column named 'weekday' is created in doc variable, which gives information if a day is a weekday or a weekend.
+A column named 'weekday' is created, which gives information if a day is a weekday or a weekend.
 
 
 ```r
-doc$weekday <- sapply(weekdays(as.Date(doc$date)), function(x) if (x == "Sunday" | 
+doc1$weekday <- sapply(weekdays(as.Date(doc$date)), function(x) if (x == "Sunday" | 
     x == "Saturday") return("weekend") else return("weekday"))
 ```
 
@@ -202,8 +201,8 @@ Now, consider two variables weekdayDoc and weekendDoc, which includes the entire
 
 
 ```r
-weekdayDoc <- doc[doc$weekday == "weekday", ]
-weekendDoc <- doc[doc$weekday == "weekend", ]
+weekdayDoc <- doc1[doc1$weekday == "weekday", ]
+weekendDoc <- doc1[doc1$weekday == "weekend", ]
 ```
 
 
@@ -224,5 +223,5 @@ plot(as.numeric(names(weekdayAvgSteps)), as.numeric(weekdayAvgSteps), main = "we
     xlab = "interval", ylab = "Number of steps", type = "l", col = "blue")
 ```
 
-![plot of chunk unnamed-chunk-13](figure/unnamed-chunk-13.png) 
+![plot of chunk unnamed-chunk-12](figure/unnamed-chunk-12.png) 
 

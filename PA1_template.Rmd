@@ -32,7 +32,7 @@ repetitions <- sapply(split(doc$steps, doc$dates), function(x) sum(x,na.rm=TRUE)
 Repeate each date as number of times a the sum of steps and then draw the histogram.
 
 ```{r hist, echo=TRUE}
-hist(rep(as.numeric(names(repetitions)), repetitions), xlab="Days", ylab="steps in each day", main="Histogram of sum of steps in each day",xlim=c(1,61),breaks=61, axes=FALSE)
+hist(rep(as.numeric(names(repetitions)), repetitions), xlab="Days", ylab="steps in each day", main="Histogram of sum of steps in each day",col="red", xlim=c(1,61),breaks=61, axes=FALSE)
 axis(1,seq(1,61,1))
 axis(2,seq(0,22000,500))
 box()
@@ -58,15 +58,11 @@ avgSteps <- sapply(split(doc$steps,doc$interval), function(x) mean(x,na.rm=TRUE)
 plot(as.numeric(names(avgSteps)),as.numeric(avgSteps), xlab=" 5-minute interval", ylab="average number of steps taken across all days",main="interval vs number of steps", type="l")
 ```
 
-maximum average number of steps for the time interval is as follows:
+time interval with the maximum average number of steps is as follows:
 ```{r,echo=TRUE}
-as.numeric(names(avgSteps[max(avgSteps)]))
+maxVal <- max(avgSteps)
+names(avgSteps[avgSteps==maxVal])
 ```
-and the maximum average number of steps are :
-```{r,echo=TRUE}
-avgSteps[max(avgSteps)][[1]]
-```
-
 
 ## Imputing missing values
 
@@ -78,18 +74,25 @@ nrow(doc[!complete.cases(doc),])
 ```
 These missing values are filled with mean of that 5-minute interval across all dates. This is stored in another variable doc1.
 
+First, the average number of steps for each 5-minute interval is calculated and stored in variable intervalMean. The indices of the missing values are noted and the corresponding 5-minute intervals are extracted. For the extracted 5-minute intervals vector, a new vector is created which is filled with the average values of that correspoding 5-minute interval. This vector is filled in the corresponding missing indices of Steps.
 ```{r, echo=TRUE}
 doc1 <- doc
-doc1$Mean <- sapply(split(doc1$steps,doc1$interval), function(x) mean(x,na.rm=TRUE))
+intervalMean <- sapply(split(doc1$steps,doc1$interval), function(x) mean(x,na.rm=TRUE))
 index <- which(is.na(doc1$steps), arr.ind = TRUE)
-doc1$steps[index] <- doc1$Mean[index]
+
+intervalIndices <- doc1$interval[index]
+imputeValues <- sapply(intervalIndices, function(x){ intervalMean[names(intervalMean)==x]})
+for(i in 1:length(index))
+  {
+      doc1$steps[index[i]] <- imputeValues[i]
+  }
 ```
 
 Now if we plot the histogram for total number of steps for each day. The plot may look as follows:
 
 ```{r , echo=TRUE}
 repetitions1 <- sapply(split(doc1$steps, doc1$dates), function(x) sum(x,na.rm=TRUE))
-hist(rep(as.numeric(names(repetitions1)), repetitions1), xlab="Days", ylab="steps in each day", main="Histogram of sum of steps in each day",xlim=c(1,61),breaks=61, axes=FALSE)
+hist(rep(as.numeric(names(repetitions1)), repetitions1), xlab="Days", ylab="steps in each day", main="Histogram of sum of steps in each day",col="red", xlim=c(1,61),breaks=61, axes=FALSE)
 axis(1,seq(1,61,1))
 axis(2,seq(0,22000,500))
 box()
@@ -114,17 +117,17 @@ As we have ignored the missing values previously, hence the values of mean and m
 
 Each day is classified as weekday or weekend. Then get the distribution of time-interval and average number of steps for each class (i.e., weekday, weekend).
 
-A column named 'weekday' is created in doc variable, which gives information if a day is a weekday or a weekend.
+A column named 'weekday' is created, which gives information if a day is a weekday or a weekend.
 
 ```{r,echo=TRUE}
-doc$weekday <- sapply(weekdays(as.Date(doc$date)), function(x) if(x=="Sunday"|x=="Saturday") return("weekend") else return("weekday"))
+doc1$weekday <- sapply(weekdays(as.Date(doc$date)), function(x) if(x=="Sunday"|x=="Saturday") return("weekend") else return("weekday"))
 ```
 
 Now, consider two variables weekdayDoc and weekendDoc, which includes the entire information regarding weekdays and weekends respectively.
 
 ```{r,echo=TRUE}
-weekdayDoc <- doc[doc$weekday=="weekday",]
-weekendDoc <- doc[doc$weekday=="weekend",]
+weekdayDoc <- doc1[doc1$weekday=="weekday",]
+weekendDoc <- doc1[doc1$weekday=="weekend",]
 ```
 
 Now, plot the graph which includes the distribution of average number of steps taken for each time interval across weekdays and weekends seperately.
